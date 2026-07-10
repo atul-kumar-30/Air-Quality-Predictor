@@ -28,8 +28,8 @@ function getAQIStatus(pm25) {
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 export default function Dashboard() {
-  const [searchInput, setSearchInput] = useState("Delhi");
-  const [activeCity, setActiveCity] = useState("Delhi");
+  const [searchInput, setSearchInput] = useState("");
+  const [activeCity, setActiveCity] = useState("");
   const [history, setHistory] = useState([]);
   const [current, setCurrent] = useState(null);
   const [predictions, setPredictions] = useState([]);
@@ -52,8 +52,8 @@ export default function Dashboard() {
       const resForecast = await axios.post(`${API_URL}/forecast`, { city: target, hours: 24 });
       if (resForecast.data.status === "ok") setPredictions(resForecast.data.predictions);
 
-      // Refresh history after a successful search
-      fetchHistory();
+      // Save to local history
+      saveToHistory(target);
     } catch (err) {
       console.error(err);
       setError("Failed to fetch data. Ensure the backend is running.");
@@ -62,18 +62,22 @@ export default function Dashboard() {
     }
   }
 
-  async function fetchHistory() {
-    try {
-      const res = await axios.get(`${API_URL}/history`);
-      if (res.data.status === "ok") setHistory(res.data.history);
-    } catch (err) {
-      console.error("Failed to fetch history", err);
-    }
+  function loadHistory() {
+    const saved = localStorage.getItem("aqi_recent_cities");
+    if (saved) setHistory(JSON.parse(saved));
+  }
+
+  function saveToHistory(city) {
+    const saved = localStorage.getItem("aqi_recent_cities");
+    let hist = saved ? JSON.parse(saved) : [];
+    // Add new city to start, remove duplicates, keep max 5
+    hist = [city, ...hist.filter(c => c.toLowerCase() !== city.toLowerCase())].slice(0, 5);
+    localStorage.setItem("aqi_recent_cities", JSON.stringify(hist));
+    setHistory(hist);
   }
 
   useEffect(() => { 
-    fetchData("Delhi"); 
-    fetchHistory();
+    loadHistory();
     /* eslint-disable-next-line */ 
   }, []);
 
@@ -180,21 +184,33 @@ export default function Dashboard() {
 
       {error && <div className="error-banner">{error}</div>}
 
-      {/* AQI Health Status Banner */}
-      {aqiStatus && (
-        <div className="aqi-banner" style={{ background: aqiStatus.bg, borderColor: aqiStatus.color }}>
-          <div className="aqi-dot" style={{ background: aqiStatus.color }} />
-          <div>
-            <strong style={{ color: aqiStatus.color }}>Air Quality: {aqiStatus.label}</strong>
-            <p>{aqiStatus.desc}</p>
-          </div>
-          <div className="aqi-value" style={{ color: aqiStatus.color }}>
-            PM2.5: {pm25Value?.toFixed(1)} μg/m³
-          </div>
+      {!activeCity && !loading && (
+        <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8", background: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ marginBottom: "16px", opacity: 0.5 }}>
+             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <h3 style={{ margin: "0 0 8px 0", color: "#f8fafc", fontWeight: 500 }}>Welcome to Air Quality Agent</h3>
+          <p style={{ margin: 0, fontSize: "14px" }}>Search for a city above to view real-time pollution data and AI forecasts.</p>
         </div>
       )}
 
-      <div className="grid">
+      {activeCity && (
+        <>
+          {/* AQI Health Status Banner */}
+          {aqiStatus && (
+            <div className="aqi-banner" style={{ background: aqiStatus.bg, borderColor: aqiStatus.color }}>
+              <div className="aqi-dot" style={{ background: aqiStatus.color }} />
+              <div>
+                <strong style={{ color: aqiStatus.color }}>Air Quality: {aqiStatus.label}</strong>
+                <p>{aqiStatus.desc}</p>
+              </div>
+              <div className="aqi-value" style={{ color: aqiStatus.color }}>
+                PM2.5: {pm25Value?.toFixed(1)} μg/m³
+              </div>
+            </div>
+          )}
+
+          <div className="grid">
 
         {/* Current Measurements Card */}
         <div className="card">
@@ -260,7 +276,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
