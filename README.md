@@ -4,7 +4,7 @@ A Full-Stack Machine Learning web application that provides real-time air qualit
 
 Built with a **React** frontend, a **FastAPI** backend, and a **Random Forest Regressor** machine learning model.
 
-![Dashboard Preview](public/preview.png) *(Note: Add a screenshot of your dashboard here!)*
+![Dashboard Preview](public/ui.png)
 
 ## 🚀 Key Features
 
