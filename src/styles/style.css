@@ -1,0 +1,319 @@
+:root {
+  --bg-dark: #09090b;
+  --bg-gradient: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #09090b 100%);
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --accent: #22d3ee;
+  --accent-glow: rgba(34, 211, 238, 0.4);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --glass-blur: blur(16px);
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg-dark);
+  background-image: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+.header {
+  padding: 24px 0;
+  background: rgba(9, 9, 11, 0.6);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--card-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(to right, #fff, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.sub {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  align-items: center;
+}
+
+.controls input {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-main);
+  min-width: 250px;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.controls input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.controls button {
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.controls button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--accent-glow);
+  filter: brightness(1.1);
+}
+
+.controls button:active {
+  transform: translateY(0);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.card {
+  background: var(--card-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card.full {
+  grid-column: 1 / -1;
+}
+
+.metrics {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.metrics li {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background 0.2s;
+}
+
+.metrics li:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.metrics li strong {
+  color: var(--accent);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metrics li span {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.metrics li .time {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+.footer {
+  margin-top: 60px;
+  padding: 24px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  border-top: 1px solid var(--card-border);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* Error Banner */
+.error-banner {
+  color: #ef4444;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-size: 14px;
+}
+
+/* AQI Health Status Banner */
+.aqi-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid;
+  margin-bottom: 28px;
+  animation: fadeIn 0.4s ease;
+}
+
+.aqi-banner p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.aqi-banner strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.aqi-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-top: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.15); }
+}
+
+.aqi-value {
+  margin-left: auto;
+  font-size: 20px;
+  font-weight: 800;
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* Card subtitle / description text */
+.card-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: -12px 0 18px;
+  line-height: 1.6;
+}
+
+.card-subtitle strong {
+  color: #cbd5e1;
+}
+
+/* Pollutant description inside each metric card */
+.pollutant-desc {
+  font-size: 11px;
+  color: #475569;
+  font-style: normal;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* Updated metric cards */
+.metrics li strong {
+  color: var(--accent);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metrics li span {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.metrics li span small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Forecast peak warning */
+.forecast-warning {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-left: 3px solid;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.2);
+  margin-top: 4px;
+}

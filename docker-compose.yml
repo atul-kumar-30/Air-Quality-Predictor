@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  # ── Python FastAPI Backend ────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile        # uses the root Dockerfile
+    ports:
+      - "8000:8000"                 # host:container
+    restart: unless-stopped
+
+  # ── React Frontend ────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend   # uses Dockerfile.frontend
+    ports:
+      - "3000:3000"                 # host:container
+    depends_on:
+      - backend                     # wait for backend to start first
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    restart: unless-stopped
