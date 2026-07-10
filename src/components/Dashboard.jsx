@@ -25,6 +25,8 @@ function getAQIStatus(pm25) {
   return             { label: "Hazardous",              color: "#7f1d1d", bg: "rgba(127,29,29,0.3)",    desc: "Emergency conditions. Everyone should avoid all outdoor activity." };
 }
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+
 export default function Dashboard() {
   const [searchInput, setSearchInput] = useState("Delhi");
   const [activeCity, setActiveCity] = useState("Delhi");
@@ -44,10 +46,10 @@ export default function Dashboard() {
     setError("");
     
     try {
-      const resCurrent = await axios.get(`http://localhost:8000/current?city=${encodeURIComponent(target)}`);
+      const resCurrent = await axios.get(`${API_URL}/current?city=${encodeURIComponent(target)}`);
       if (resCurrent.data.status === "ok") setCurrent(resCurrent.data.data);
 
-      const resForecast = await axios.post(`http://localhost:8000/forecast`, { city: target, hours: 24 });
+      const resForecast = await axios.post(`${API_URL}/forecast`, { city: target, hours: 24 });
       if (resForecast.data.status === "ok") setPredictions(resForecast.data.predictions);
 
       // Refresh history after a successful search
@@ -62,7 +64,7 @@ export default function Dashboard() {
 
   async function fetchHistory() {
     try {
-      const res = await axios.get(`http://localhost:8000/history`);
+      const res = await axios.get(`${API_URL}/history`);
       if (res.data.status === "ok") setHistory(res.data.history);
     } catch (err) {
       console.error("Failed to fetch history", err);
