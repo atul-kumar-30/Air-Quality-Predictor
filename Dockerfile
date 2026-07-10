@@ -15,12 +15,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all backend source files into the container
 COPY app.py .
 COPY data_fetcher.py .
-COPY model.py .
 COPY fetch_data.py .
-COPY train_model.py .
+COPY database.py .
 
-# Copy the pre-trained model and data
-COPY aqi_model.pkl .
+# Copy the model package and data
+COPY model/ ./model/
 COPY data/ ./data/
 
 # Expose port 8000 so the frontend can talk to it

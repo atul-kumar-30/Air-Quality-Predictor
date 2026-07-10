@@ -44,7 +44,9 @@ body {
   font-weight: 700;
   background: linear-gradient(to right, #fff, var(--accent));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: transparent;
   letter-spacing: -0.5px;
 }
 
@@ -170,19 +172,6 @@ body {
   background: rgba(255, 255, 255, 0.03);
 }
 
-.metrics li strong {
-  color: var(--accent);
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.metrics li span {
-  font-size: 24px;
-  font-weight: 700;
-  color: #fff;
-}
-
 .metrics li .time {
   font-size: 11px;
   color: var(--text-muted);
@@ -227,7 +216,7 @@ body {
   gap: 14px;
   padding: 16px 20px;
   border-radius: 14px;
-  border: 1px solid;
+  border: 1px solid var(--card-border);
   margin-bottom: 28px;
   animation: fadeIn 0.4s ease;
 }
@@ -312,7 +301,7 @@ body {
 .forecast-warning {
   font-size: 13px;
   padding: 8px 12px;
-  border-left: 3px solid;
+  border-left: 3px solid #ef4444;
   border-radius: 6px;
   background: rgba(0,0,0,0.2);
   margin-top: 4px;
