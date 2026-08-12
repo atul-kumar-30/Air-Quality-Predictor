@@ -2,9 +2,9 @@
 
 A Full-Stack Machine Learning web application that provides real-time air quality metrics and 24-hour pollution forecasts for any city in the world. 
 
-Built with a **React** frontend, a **FastAPI** backend, and a **Random Forest Regressor** machine learning model.
+**🔴 Live Demo: [https://air-quality-predictor-frontend.onrender.com/](https://air-quality-predictor-frontend.onrender.com/)**
 
-![Dashboard Preview](public/ui.png)
+Built with a **React** frontend, a **FastAPI** backend, and a **Random Forest Regressor** machine learning model.
 
 ## 🚀 Key Features
 
@@ -17,35 +17,51 @@ Built with a **React** frontend, a **FastAPI** backend, and a **Random Forest Re
 
 ## 🛠️ Tech Stack
 
-* **Frontend:** React, JavaScript (JSX), CSS3, Leaflet, Chart.js
-* **Backend:** Python, FastAPI, aiohttp, SQLite
-* **Machine Learning:** Scikit-learn (RandomForestRegressor), Pandas, NumPy, Joblib
-* **DevOps:** Docker, Docker Compose
-* **External APIs:** Open-Meteo (Geocoding & Air Quality)
+| Category | Technologies |
+| :--- | :--- |
+| 🌐 **Frontend** | React (Vite), JavaScript (JSX), CSS3, Leaflet, Chart.js |
+| ⚙️ **Backend** | Python, FastAPI, aiohttp, SQLite |
+| 🧠 **Machine Learning** | Scikit-learn (RandomForestRegressor), Pandas, NumPy, Joblib |
+| 🐳 **DevOps** | Docker, Docker Compose |
+| 🔌 **External APIs** | Open-Meteo (Geocoding & Air Quality) |
 
 ## ⚙️ How to Run Locally
 
-Because this project is fully containerized, you can run the entire stack (Frontend, Backend, and Database) with a single command. You do not need to install Python, Node, or any dependencies locally.
+You have two options to run this project: using Docker (recommended) or manually running the servers.
 
-### Prerequisites
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed on your machine.
+### Option A: Run with Docker (Recommended)
+Because this project is fully containerized, you can run the entire stack (Frontend, Backend, and Database) with a single command. You do not need to install Python or Node.js.
 
-### Installation Steps
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/air-quality-agent.git
-   cd air-quality-agent
-   ```
-
-2. Start the Docker containers:
+1. Ensure [Docker Desktop](https://www.docker.com/products/docker-desktop/) is running.
+2. Run the following command in the root directory:
    ```bash
    docker-compose up --build
    ```
 
-3. Open your browser and navigate to:
-   - **Frontend UI:** `http://localhost:3000`
-   - **Backend API Docs:** `http://localhost:8000/docs`
+### Option B: Run Manually (Local Development)
+
+If you prefer to run the services natively without Docker:
+
+1. **Start the Backend:**
+   Open a terminal and run:
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   uvicorn app:app --reload
+   ```
+
+2. **Start the Frontend:**
+   Open a second, separate terminal and run:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+### Accessing the Application
+Once the servers are running (via either method), open your browser:
+- **Frontend UI:** `http://localhost:3000` (if Docker) or `http://localhost:5173` (if manual)
+- **Backend API Docs:** `http://localhost:8000/docs`
 
 ## 🧠 Machine Learning Architecture
 
@@ -55,4 +71,8 @@ The AI model is located in the `model/` directory.
 3. `model.py`: Loaded into memory by the FastAPI server to provide sub-second inference for live user requests.
 
 ---
-*Built by Atul Kumar*
+
+<div align="center">
+  <b>Developed by Atul Kumar</b>
+</div>
+

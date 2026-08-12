@@ -64,3 +64,17 @@ async def get_history():
         return {"status": "ok", "history": recent}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/search")
+async def search(q: str):
+    """
+    Search for a city by name to provide autocomplete suggestions.
+    """
+    if not q or len(q) < 2:
+        return {"status": "ok", "results": []}
+    
+    try:
+        results = await data_fetcher.search_cities(q, count=5)
+        return {"status": "ok", "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

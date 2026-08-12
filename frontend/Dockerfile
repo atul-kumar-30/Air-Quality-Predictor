@@ -11,9 +11,10 @@ COPY package.json package-lock.json ./
 # Install all npm dependencies
 RUN npm install --silent
 
-# Copy all frontend source files
+# Copy all frontend source files and Vite configs
 COPY public/ ./public/
 COPY src/ ./src/
+COPY index.html vite.config.js eslint.config.js ./
 
 # Expose port 3000 for the React dev server
 EXPOSE 3000
@@ -23,5 +24,5 @@ ENV BROWSER=none
 # Tell React to allow connections from outside the container
 ENV HOST=0.0.0.0
 
-# Start the React development server
-CMD ["npm", "start"]
+# Start the Vite development server
+CMD ["npm", "run", "dev", "--", "--host"]

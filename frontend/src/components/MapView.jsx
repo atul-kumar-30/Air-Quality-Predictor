@@ -4,11 +4,15 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Fix default marker icon paths
+import marker2x from 'leaflet/dist/images/marker-icon-2x.png';
+import marker from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
-  iconUrl:       require("leaflet/dist/images/marker-icon.png"),
-  shadowUrl:     require("leaflet/dist/images/marker-shadow.png"),
+  iconRetinaUrl: marker2x,
+  iconUrl:       marker,
+  shadowUrl:     markerShadow,
 });
 
 // ── Inner component: listens for map clicks and reverse-geocodes ──
@@ -52,6 +56,29 @@ function MapCenterUpdater({ coords }) {
   return null;
 }
 
+// ── Inner component: fixes the grey gap by invalidating map size on container resize ──
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    // Initial invalidate after a short delay to allow flexbox/grid to settle
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+
+    // Watch for any future container resizes
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    observer.observe(map.getContainer());
+
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [map]);
+  return null;
+}
+
 // ── Main MapView component ──────────────────────────────────────
 export default function MapView({ city, onCitySelect, aqiColor }) {
   const [coords,    setCoords]    = useState({ lat: 20.5937, lng: 78.9629 });
@@ -92,7 +119,7 @@ export default function MapView({ city, onCitySelect, aqiColor }) {
   });
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", height: "100%", width: "100%" }}>
 
       {/* Floating hint overlay */}
       <div style={{
@@ -167,22 +194,24 @@ export default function MapView({ city, onCitySelect, aqiColor }) {
       <MapContainer
         center={[coords.lat, coords.lng]}
         zoom={10}
-        style={{ height: "400px", width: "100%", borderRadius: "12px" }}
+        attributionControl={false}
+        style={{ height: "100%", width: "100%", borderRadius: "12px" }}
       >
-        {/* 🛰️ ESRI Satellite Imagery — free, no API key required */}
+        {/* 🛰️ ESRI Satellite Imagery */}
         <TileLayer
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          attribution="Tiles &copy; Esri"
         />
-        
-        {/* 🏷️ ESRI Labels & Boundaries (Shows city/state/country names over the satellite map) */}
+        {/* 🏷️ ESRI Labels & Boundaries */}
         <TileLayer
           url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-          attribution="&copy; Esri &mdash; Boundaries and Places"
         />
+
 
         {/* Click-to-analyze handler */}
         <MapClickHandler onCitySelect={onCitySelect} setClickInfo={setClickInfo} />
+
+        {/* Fixes grey tile gaps */}
+        <MapResizer />
 
         {/* Auto-pan when city changes */}
         <MapCenterUpdater coords={coords} />

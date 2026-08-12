@@ -103,3 +103,51 @@ async def fetch_history(city: str, hours: int = 72) -> List[Dict]:
                             })
             database.set_cached_data(cache_key, out)
             return out
+
+async def search_cities(query: str, count: int = 5) -> List[Dict]:
+    """
+    Search for cities matching a query using the Open-Meteo geocoding API.
+    Filters the results to ensure strict prefix matching for higher accuracy.
+    """
+    cache_key = f"search_{query.lower()}"
+    cached = database.get_cached_data(cache_key)
+    if cached:
+        return cached
+
+    async with aiohttp.ClientSession() as session:
+        # Fetch more results initially so we have enough after filtering
+        params = {"name": query, "count": 20, "language": "en", "format": "json"}
+        async with session.get(GEOCODING_URL, params=params) as resp:
+            data = await resp.json()
+            results = data.get("results", [])
+            out = []
+            
+            for r in results:
+                name = r.get("name")
+                # Enforce strict word-to-word (prefix) matching
+                if not name or not name.lower().startswith(query.lower()):
+                    continue
+                    
+                country = r.get("country")
+                admin1 = r.get("admin1") # State/Region
+                
+                parts = [name]
+                if admin1 and admin1 != name:
+                    parts.append(admin1)
+                if country:
+                    parts.append(country)
+                    
+                display_name = ", ".join(parts)
+                out.append({
+                    "name": name,
+                    "display_name": display_name,
+                    "lat": r.get("latitude"),
+                    "lon": r.get("longitude")
+                })
+                
+                # Stop once we reach the desired count
+                if len(out) >= count:
+                    break
+                    
+            database.set_cached_data(cache_key, out)
+            return out
