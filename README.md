@@ -72,7 +72,5 @@ The AI model is located in the `model/` directory.
 
 ---
 
-<div align="center">
-  <b>Developed by Atul Kumar</b>
-</div>
+**Developed by Atul Kumar**
 
