@@ -65,10 +65,10 @@ Once the servers are running (via either method), open your browser:
 
 ## 🧠 Machine Learning Architecture
 
-The AI model is located in the `model/` directory.
-1. `fetch_data.py`: Collects 30 days of historical hourly pollution data to build the training dataset (`aqi_hourly.csv`).
-2. `train_model.py`: Parses the dataset, engineers a 24-hour rolling window feature set, and trains the `RandomForestRegressor`.
-3. `model.py`: Loaded into memory by the FastAPI server to provide sub-second inference for live user requests.
+The AI model is located in the `backend/model/` directory.
+1. `backend/fetch_data.py`: Collects 30 days of historical hourly pollution data to build the training dataset (`aqi_hourly.csv`).
+2. `backend/model/train_model.py`: Parses the dataset, engineers a 24-hour rolling window feature set, and trains the `RandomForestRegressor`.
+3. `backend/model/model.py`: Loaded into memory by the FastAPI server to provide sub-second inference for live user requests.
 
 ---
 
