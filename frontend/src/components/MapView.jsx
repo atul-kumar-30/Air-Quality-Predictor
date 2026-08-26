@@ -60,20 +60,26 @@ function MapCenterUpdater({ coords }) {
 function MapResizer() {
   const map = useMap();
   useEffect(() => {
-    // Initial invalidate after a short delay to allow flexbox/grid to settle
-    const timer = setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
-
-    // Watch for any future container resizes
+    let timeoutId;
     const observer = new ResizeObserver(() => {
-      map.invalidateSize();
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        map.invalidateSize();
+      }, 50);
     });
     observer.observe(map.getContainer());
 
+    // Fallback timers for delayed layout shifts (e.g. data loading)
+    const t1 = setTimeout(() => map.invalidateSize(), 200);
+    const t2 = setTimeout(() => map.invalidateSize(), 600);
+    const t3 = setTimeout(() => map.invalidateSize(), 1200);
+
     return () => {
-      clearTimeout(timer);
       observer.disconnect();
+      clearTimeout(timeoutId);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [map]);
   return null;

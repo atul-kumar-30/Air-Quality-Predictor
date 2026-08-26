@@ -292,7 +292,7 @@ export default function Dashboard() {
               </h3>
               <p className="card-subtitle" style={{ marginBottom: "0" }}>Showing the geographical location of <strong>{activeCity}</strong> on the map.</p>
               
-              <div style={{ flex: 1, minHeight: 0, position: "relative", borderRadius: "12px", overflow: "hidden", marginTop: "12px" }}>
+              <div style={{ flex: 1, minHeight: "250px", position: "relative", borderRadius: "12px", overflow: "hidden", marginTop: "12px" }}>
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
                   <MapView city={activeCity} onCitySelect={handleMapCitySelect} aqiColor={aqiStatus?.color} />
                 </div>
