@@ -44,17 +44,23 @@ def get_cached_data(city: str):
     
     if row:
         data_json, timestamp_str = row
-        timestamp = datetime.fromisoformat(timestamp_str)
-        
-        # Check if cache is older than 60 minutes
-        delta = datetime.now() - timestamp
-        if delta.total_seconds() < 3600:
-            return json.loads(data_json)
+        try:
+            timestamp = datetime.fromisoformat(timestamp_str)
+            # Check if cache is older than 60 minutes
+            delta = datetime.now() - timestamp
+            if delta.total_seconds() < 3600:
+                parsed = json.loads(data_json)
+                if parsed:  # Ignore empty cached data
+                    return parsed
+        except Exception:
+            return None
             
     return None
 
 def set_cached_data(city: str, data: dict):
-    """Save data to cache."""
+    """Save data to cache (only if data is non-empty)."""
+    if not data:
+        return
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     

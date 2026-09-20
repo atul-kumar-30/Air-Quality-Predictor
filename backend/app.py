@@ -5,15 +5,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from model import model as model_module
 import data_fetcher
 import database
+import logging
 import os
+
+logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI(title="Air Quality Agent")
 
-# allow frontend dev server
+# Allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # change to frontend origin in prod
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -27,10 +30,15 @@ def startup_event():
     database.init_db()         # create database tables
     model_module.load_model()  # loads model into memory
 
+@app.get("/")
+def root():
+    """Health check endpoint for Render."""
+    return {"status": "ok", "message": "Air Quality Predictor API is running"}
+
 @app.get("/current")
 async def get_current(city: str):
     """
-    Returns latest AQ measurements for a city (from OpenAQ).
+    Returns latest AQ measurements for a city (from Open-Meteo).
     """
     try:
         # Log the search in SQLite
@@ -39,6 +47,7 @@ async def get_current(city: str):
         data = await data_fetcher.fetch_latest_city(city)
         return {"status": "ok", "city": city, "data": data}
     except Exception as e:
+        logger.error(f"Error fetching current AQ for '{city}': {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/forecast")
@@ -52,6 +61,7 @@ async def forecast(req: ForecastRequest):
         preds = model_module.predict_from_history(history, hours=req.hours)
         return {"status": "ok", "city": req.city, "predictions": preds}
     except Exception as e:
+        logger.error(f"Error fetching forecast for '{req.city}': {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/history")

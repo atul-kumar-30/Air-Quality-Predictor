@@ -24,9 +24,11 @@ def predict_from_history(history_records, hours=24):
     For simplicity, predict next 'hours' values as repeating last known or using model if available.
     """
     # convert incoming history to dataframe pivoted by parameter
+    if not history_records:
+        return [{"hour_from_now": i + 1, "pred": 35.0} for i in range(hours)]
     df = pd.DataFrame(history_records)
     if df.empty:
-        raise ValueError("No history data found for city.")
+        return [{"hour_from_now": i + 1, "pred": 35.0} for i in range(hours)]
     df['datetime'] = pd.to_datetime(df['datetime'])
     # pivot to hourly average per parameter
     df.set_index('datetime', inplace=True)

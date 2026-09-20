@@ -50,16 +50,21 @@ export default function Dashboard() {
     
     try {
       const resCurrent = await axios.get(`${API_URL}/current?city=${encodeURIComponent(target)}`);
-      if (resCurrent.data.status === "ok") setCurrent(resCurrent.data.data);
+      if (resCurrent.data.status === "ok" && Object.keys(resCurrent.data.data || {}).length > 0) {
+        setCurrent(resCurrent.data.data);
+      } else {
+        throw new Error("No air quality measurements returned for this location.");
+      }
 
       const resForecast = await axios.post(`${API_URL}/forecast`, { city: target, hours: 24 });
-      if (resForecast.data.status === "ok") setPredictions(resForecast.data.predictions);
+      if (resForecast.data.status === "ok") setPredictions(resForecast.data.predictions || []);
 
       // Save to local history
       saveToHistory(target);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch data. Ensure the backend is running.");
+      const detail = err.response?.data?.detail || err.message;
+      setError(detail || "Failed to fetch data. Ensure the backend is running.");
     } finally {
       setLoading(false);
     }

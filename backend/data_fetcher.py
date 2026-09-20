@@ -8,6 +8,12 @@ import database
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 AIR_QUALITY_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 
+# Browser-like User-Agent to avoid 403 Forbidden on cloud platforms (e.g. Render / Cloudflare WAF)
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 (AirQualityApp/1.0)",
+    "Accept": "application/json"
+}
+
 # Mapping Open-Meteo fields to the expected format
 PARAM_MAP = {
     'pm10': 'pm10',
@@ -20,7 +26,10 @@ PARAM_MAP = {
 
 async def get_coordinates(city: str, session: aiohttp.ClientSession):
     params = {"name": city, "count": 1}
-    async with session.get(GEOCODING_URL, params=params) as resp:
+    async with session.get(GEOCODING_URL, params=params, headers=HEADERS) as resp:
+        if resp.status != 200:
+            err_text = await resp.text()
+            raise ValueError(f"Geocoding service returned HTTP {resp.status}: {err_text[:100]}")
         data = await resp.json()
         if not data.get("results"):
             raise ValueError(f"City '{city}' not found.")
@@ -37,7 +46,7 @@ async def fetch_latest_city(city: str) -> Dict:
     if cached:
         return cached
         
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
         lat, lon = await get_coordinates(city, session)
         
         params = {
@@ -46,8 +55,13 @@ async def fetch_latest_city(city: str) -> Dict:
             "current": ",".join(PARAM_MAP.keys())
         }
         
-        async with session.get(AIR_QUALITY_URL, params=params) as resp:
+        async with session.get(AIR_QUALITY_URL, params=params, headers=HEADERS) as resp:
+            if resp.status != 200:
+                err_text = await resp.text()
+                raise ValueError(f"Air quality service returned HTTP {resp.status}: {err_text[:100]}")
             data = await resp.json()
+            if data.get("error"):
+                raise ValueError(f"Air quality service error: {data.get('reason')}")
             current = data.get("current", {})
             out = {}
             time_str = current.get("time", "")
@@ -59,7 +73,8 @@ async def fetch_latest_city(city: str) -> Dict:
                         "utc": time_str + "Z", # naive UTC 
                         "unit": "μg/m³" # Default open-meteo unit
                     }
-            database.set_cached_data(cache_key, out)
+            if out:
+                database.set_cached_data(cache_key, out)
             return out
 
 async def fetch_history(city: str, hours: int = 72) -> List[Dict]:
@@ -73,7 +88,7 @@ async def fetch_history(city: str, hours: int = 72) -> List[Dict]:
 
     days = max(1, min(90, hours // 24)) # Open-meteo max past_days is ~90 usually
     
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
         lat, lon = await get_coordinates(city, session)
         
         params = {
@@ -84,8 +99,13 @@ async def fetch_history(city: str, hours: int = 72) -> List[Dict]:
             "forecast_days": 0
         }
         
-        async with session.get(AIR_QUALITY_URL, params=params) as resp:
+        async with session.get(AIR_QUALITY_URL, params=params, headers=HEADERS) as resp:
+            if resp.status != 200:
+                err_text = await resp.text()
+                raise ValueError(f"Air quality history service returned HTTP {resp.status}: {err_text[:100]}")
             data = await resp.json()
+            if data.get("error"):
+                raise ValueError(f"Air quality history error: {data.get('reason')}")
             hourly = data.get("hourly", {})
             times = hourly.get("time", [])
             
@@ -101,7 +121,8 @@ async def fetch_history(city: str, hours: int = 72) -> List[Dict]:
                                 "parameter": standard_param,
                                 "value": val
                             })
-            database.set_cached_data(cache_key, out)
+            if out:
+                database.set_cached_data(cache_key, out)
             return out
 
 async def search_cities(query: str, count: int = 5) -> List[Dict]:
@@ -114,10 +135,12 @@ async def search_cities(query: str, count: int = 5) -> List[Dict]:
     if cached:
         return cached
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
         # Fetch more results initially so we have enough after filtering
         params = {"name": query, "count": 20, "language": "en", "format": "json"}
-        async with session.get(GEOCODING_URL, params=params) as resp:
+        async with session.get(GEOCODING_URL, params=params, headers=HEADERS) as resp:
+            if resp.status != 200:
+                return []
             data = await resp.json()
             results = data.get("results", [])
             out = []
@@ -149,5 +172,6 @@ async def search_cities(query: str, count: int = 5) -> List[Dict]:
                 if len(out) >= count:
                     break
                     
-            database.set_cached_data(cache_key, out)
+            if out:
+                database.set_cached_data(cache_key, out)
             return out

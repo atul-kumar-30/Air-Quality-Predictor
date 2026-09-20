@@ -20,5 +20,5 @@ services:
     depends_on:
       - backend                     # wait for backend to start first
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8000
     restart: unless-stopped
