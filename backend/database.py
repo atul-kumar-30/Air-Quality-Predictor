@@ -31,8 +31,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-def get_cached_data(city: str):
-    """Retrieve data from cache if it exists and is less than 1 hour old."""
+def get_cached_data(city: str, ignore_expiry: bool = False):
+    """Retrieve data from cache if it exists and is less than 1 hour old (or ignore expiry if fallback)."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
@@ -46,9 +46,8 @@ def get_cached_data(city: str):
         data_json, timestamp_str = row
         try:
             timestamp = datetime.fromisoformat(timestamp_str)
-            # Check if cache is older than 60 minutes
             delta = datetime.now() - timestamp
-            if delta.total_seconds() < 3600:
+            if ignore_expiry or delta.total_seconds() < 3600:
                 parsed = json.loads(data_json)
                 if parsed:  # Ignore empty cached data
                     return parsed

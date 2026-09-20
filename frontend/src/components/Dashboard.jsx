@@ -25,6 +25,61 @@ function getAQIStatus(pm25) {
   return             { label: "Hazardous",              color: "#7f1d1d", bg: "rgba(127,29,29,0.3)",    desc: "Emergency conditions. Everyone should avoid all outdoor activity." };
 }
 
+const PARAM_MAP = {
+  pm10: "pm10",
+  pm2_5: "pm25",
+  carbon_monoxide: "co",
+  nitrogen_dioxide: "no2",
+  sulphur_dioxide: "so2",
+  ozone: "o3"
+};
+
+async function fetchOpenMeteoClient(city) {
+  // 1. Geocode location directly from browser
+  const geoRes = await axios.get(
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`
+  );
+  if (!geoRes.data.results || geoRes.data.results.length === 0) {
+    throw new Error(`City "${city}" not found.`);
+  }
+  const { latitude, longitude } = geoRes.data.results[0];
+
+  // 2. Fetch current and 72h historical air quality in one call directly from browser IP
+  const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&past_days=3&forecast_days=0`;
+  const aqRes = await axios.get(aqUrl);
+
+  const currentRaw = aqRes.data.current || {};
+  const timeStr = currentRaw.time || "";
+  const currentFormatted = {};
+  for (const [omParam, stdParam] of Object.entries(PARAM_MAP)) {
+    if (omParam in currentRaw) {
+      currentFormatted[stdParam] = {
+        value: currentRaw[omParam],
+        utc: timeStr + "Z",
+        unit: "μg/m³"
+      };
+    }
+  }
+
+  const hourlyRaw = aqRes.data.hourly || {};
+  const times = hourlyRaw.time || [];
+  const historyList = [];
+  for (let i = 0; i < times.length; i++) {
+    const dtStr = times[i] + "Z";
+    for (const [omParam, stdParam] of Object.entries(PARAM_MAP)) {
+      if (hourlyRaw[omParam] && hourlyRaw[omParam][i] !== undefined && hourlyRaw[omParam][i] !== null) {
+        historyList.push({
+          datetime: dtStr,
+          parameter: stdParam,
+          value: hourlyRaw[omParam][i]
+        });
+      }
+    }
+  }
+
+  return { current: currentFormatted, history: historyList };
+}
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function Dashboard() {
@@ -49,15 +104,42 @@ export default function Dashboard() {
     setShowSuggestions(false);
     
     try {
-      const resCurrent = await axios.get(`${API_URL}/current?city=${encodeURIComponent(target)}`);
-      if (resCurrent.data.status === "ok" && Object.keys(resCurrent.data.data || {}).length > 0) {
-        setCurrent(resCurrent.data.data);
-      } else {
-        throw new Error("No air quality measurements returned for this location.");
+      let currentData = null;
+      let historyData = null;
+
+      // 1. Try direct browser fetch first (uses user's client IP, avoids Render shared IP 429 rate limit)
+      try {
+        const clientRes = await fetchOpenMeteoClient(target);
+        if (clientRes.current && Object.keys(clientRes.current).length > 0) {
+          currentData = clientRes.current;
+          historyData = clientRes.history;
+        }
+      } catch (clientErr) {
+        console.warn("Client-side direct fetch failed, falling back to backend API:", clientErr);
       }
 
-      const resForecast = await axios.post(`${API_URL}/forecast`, { city: target, hours: 24 });
-      if (resForecast.data.status === "ok") setPredictions(resForecast.data.predictions || []);
+      // 2. Fallback to backend /current if direct client fetch was not successful
+      if (!currentData) {
+        const resCurrent = await axios.get(`${API_URL}/current?city=${encodeURIComponent(target)}`);
+        if (resCurrent.data.status === "ok" && Object.keys(resCurrent.data.data || {}).length > 0) {
+          currentData = resCurrent.data.data;
+        }
+      }
+
+      if (!currentData || Object.keys(currentData).length === 0) {
+        throw new Error("No air quality measurements returned for this location.");
+      }
+      setCurrent(currentData);
+
+      // 3. Post to backend for ML Random Forest prediction (passes history if available to avoid backend re-fetching)
+      const resForecast = await axios.post(`${API_URL}/forecast`, {
+        city: target,
+        hours: 24,
+        history: historyData && historyData.length > 0 ? historyData : undefined
+      });
+      if (resForecast.data.status === "ok") {
+        setPredictions(resForecast.data.predictions || []);
+      }
 
       // Save to local history
       saveToHistory(target);

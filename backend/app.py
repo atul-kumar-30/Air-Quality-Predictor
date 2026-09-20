@@ -24,6 +24,7 @@ app.add_middleware(
 class ForecastRequest(BaseModel):
     city: str
     hours: int = 24
+    history: list = None
 
 @app.on_event("startup")
 def startup_event():
@@ -56,8 +57,11 @@ async def forecast(req: ForecastRequest):
     Returns forecasted AQI (or pollutant) for next req.hours hours.
     """
     try:
-        # fetch recent history to build features
-        history = await data_fetcher.fetch_history(req.city, hours=72)
+        if req.history and len(req.history) > 0:
+            history = req.history
+        else:
+            # fetch recent history to build features
+            history = await data_fetcher.fetch_history(req.city, hours=72)
         preds = model_module.predict_from_history(history, hours=req.hours)
         return {"status": "ok", "city": req.city, "predictions": preds}
     except Exception as e:
